@@ -1,12 +1,13 @@
 import logging
-from typing import Callable
 
 from google.auth.credentials import Credentials
 from google.cloud.logging import Client as GoogleLoggingClient
 from google.cloud.logging_v2.handlers import CloudLoggingHandler
-import time
 
-def init_logging(logger: logging.Logger, credentials: Credentials) -> Callable[[], None]:
+from typealiases import Runnable
+
+
+def init_logging(logger: logging.Logger, credentials: Credentials) -> Runnable:
     formatter = logging.Formatter('%(asctime)s | %(levelname)s | %(message)s')
 
     stdout_handler = logging.StreamHandler()

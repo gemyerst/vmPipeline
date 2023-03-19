@@ -13,7 +13,7 @@ def _check_size2(field_name: str, value: Optional[Sized]) -> Optional[Sized]:
 
 
 @pydantic.dataclasses.dataclass
-class VisionNerfConfig:
+class VisionNerfRunConfig:
     img_hw: Optional[List[int]] = None
     chunk_size: Optional[int] = 2048
     mlp_block_num: Optional[int] = 6
@@ -43,7 +43,7 @@ class VisionNerfConfig:
 
 
 @pydantic.dataclasses.dataclass
-class NvDiffrecConfig:
+class NvDiffrecRunConfig:
     random_textures: Optional[bool] = True
     iter: Optional[int] = 500
     save_interval: Optional[int] = 100
@@ -71,9 +71,9 @@ class NvDiffrecConfig:
     def learning_rate_validate(cls, v):
         return _check_size2("learning_rate", v)
 
-    def to_dict(self, visionnerf_results_path: Path, nvdiffrec_mount_prefix: Path) -> Dict[str, Any]:
+    def to_dict(self, experiment_name: str) -> Dict[str, Any]:
         return {
-            "ref_mesh": str(visionnerf_results_path),
+            "ref_mesh": str(Path("/mnt") / "visionnerf" / "results" / experiment_name),
             "random_textures": self.random_textures,
             "iter": self.iter,
             "save_interval": self.save_interval,
@@ -88,27 +88,34 @@ class NvDiffrecConfig:
             "display": self.display or [{"latlong" : True}, {"bsdf" : "kd"}, {"bsdf" : "ks"}, {"bsdf" : "normal"}],
             "layers" : self.layers,
             "background" : self.background,
-            "out_dir": str(nvdiffrec_mount_prefix / "results")
+            "out_dir": ""
         }
 
 
 @pydantic.dataclasses.dataclass
 class PipelineRequest:
     runId: str
-    bucket: str
-    prefix: str
-    visionnerfConfig: Optional[VisionNerfConfig] = None
-    nvdiffrecConfig: Optional[NvDiffrecConfig] = None
+    inputDataBucket: str
+    inputDataPrefix: str
+    outputDataBucket: str
+    visionnerfWeights: str
+    visionnerfRunConfig: Optional[VisionNerfRunConfig] = None
+    nvdiffrecRunConfig: Optional[NvDiffrecRunConfig] = None
 
-    @pydantic.validator("prefix")
+    @pydantic.validator("inputDataPrefix")
     def prefix_validate(cls, v):
         if not v.endswith("/"):
-            raise ValueError(f"Prefix '{v}' should end with forward slash '/'.")
+            raise ValueError(f"inputDataPrefix '{v}' should end with forward slash '/'.")
         return v
 
-    def vision_nerf_config(self) -> VisionNerfConfig:
-        return self.visionnerfConfig or VisionNerfConfig()
-    
-    def nvdiffrec_config(self) -> NvDiffrecConfig:
-        return self.nvdiffrecConfig or NvDiffrecConfig()
+    @pydantic.validator("visionnerfWeights")
+    def visionnerf_weights_validate(cls, v):
+        if not v.endswith(".pth"):
+            raise ValueError(f"Vision nerf weights '{v}' should end with a .pth file extension")
+        return v
 
+    def visionnerf_run_config(self) -> VisionNerfRunConfig:
+        return self.visionnerfRunConfig or VisionNerfRunConfig()
+    
+    def nvdiffrec_run_config(self) -> NvDiffrecRunConfig:
+        return self.nvdiffrecRunConfig or NvDiffrecRunConfig()

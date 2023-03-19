@@ -179,7 +179,7 @@ def cli(
                     
                 finally:
                     if perform_cleanup:
-                        shutil.rmtree(download_dir)
+                        shutil.rmtree(download_dir.resolve())
 
         finally:
             pull_future.cancel()

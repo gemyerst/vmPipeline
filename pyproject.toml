@@ -9,7 +9,8 @@ dependencies = [
     "google-cloud-storage",
     "google-cloud-logging",
     "typer",
-    "pydantic"
+    "pydantic",
+    "tqdm"
 ]
 
 [project.optional-dependencies]

@@ -19,22 +19,17 @@ class VisionNerfConfig:
     mlp_block_num: Optional[int] = 6
     white_bkgd: Optional[bool] = True
     im_feat_dim: Optional[int] = 512
-    data_range: Optional[List[int]] = None
     pose_index: Optional[int] = 0
 
     @pydantic.validator("img_hw")
     def image_hw_validate(cls, v):
         return _check_size2("img_hw", v)
-
-    @pydantic.validator("data_range")
-    def data_range_validate(cls, v):
-        return _check_size2("data_range", v)
     
     def to_dict(self, experiment_name: str, mount_prefix: Path) -> Dict[str, Any]:
         return {
             "expname": experiment_name,
             "ckptdir": mount_prefix / "weights/",
-            "ckpt_path": mount_prefix / "weights" / "checkpoint.pth",
+            "ckpt_path": mount_prefix / "weights" / "srn_cars_500000.pth",
             "data_path": mount_prefix / "data/",
             "outdir": mount_prefix / "results/",
             "img_hw": self.img_hw or [128, 128],
@@ -42,7 +37,7 @@ class VisionNerfConfig:
             "mlp_block_num": self.mlp_block_num,
             "white_bkgd": self.white_bkgd,
             "im_feat_dim": self.im_feat_dim,
-            "data_range": self.data_range or [0, 100],
+            "data_range": [0, 1],
             "pose_index": self.pose_index
         }
 
@@ -76,9 +71,9 @@ class NvDiffrecConfig:
     def learning_rate_validate(cls, v):
         return _check_size2("learning_rate", v)
 
-    def to_dict(self, visionnerf_mount_prefix: Path, nvdiffrec_mount_prefix: Path) -> Dict[str, Any]:
+    def to_dict(self, visionnerf_results_path: Path, nvdiffrec_mount_prefix: Path) -> Dict[str, Any]:
         return {
-            "ref_mesh": str(visionnerf_mount_prefix / "results"),
+            "ref_mesh": str(visionnerf_results_path),
             "random_textures": self.random_textures,
             "iter": self.iter,
             "save_interval": self.save_interval,

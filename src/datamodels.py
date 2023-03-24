@@ -1,3 +1,4 @@
+# ALL OWN CODE,  USING LIBRARIES AND ADAPTING FROM https://cloud.google.com/sdk/docs/
 from __future__ import annotations
 
 from pathlib import Path
